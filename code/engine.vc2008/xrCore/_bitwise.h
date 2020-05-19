@@ -31,13 +31,6 @@ IC	u32		btwLowestBitMask(u32 x)		{   return x & ~(x-1);	}
 /* rather useful utility functions */
 IC	bool	btwIsPow2(int v)			{ return (btwLowestBitMask(v) == v); }
 IC	bool	btwIsPow2(u32 v)			{ return (btwLowestBitMask(v) == v); }
-
-IC	int		btwPow2_Ceil(int v)
-{
-	int i = btwLowestBitMask(v);
-	while(i < v) i <<= 1;
-	return i;
-}
 IC	u32		btwPow2_Ceil(u32 v)
 {
 	u32 i = btwLowestBitMask(v);
@@ -63,12 +56,6 @@ IC	u32	btwCount1(u32 v)
 	v = ((v + (v >> 3)) & g32) + ((v >> 6) & g32);
 	return (v + (v >> 9) + (v >> 18) + (v >> 27)) & 0x3f;
 }
-
-IC	u64	btwCount1(u64 v)
-{
-	return btwCount1(u32(v&u32(-1))) + btwCount1(u32(v >> 32));
-}
-
 XRCORE_API float fFloorSSE2(const float &x);
 
 ICF int iFloor (float x) 
@@ -79,49 +66,4 @@ ICF int iFloor (float x)
 ICF int iCeil (float x)
 {
     return (int)ceil(x);	
-}
-
-ICF int iFloorFPU(float x) 
-{
-	int a = *(const int*)(&x);
-	int exponent = (127 + 31) - ((a >> 23) & 0xFF);
-	int r = (((u32)(a) << 8) | (1U << 31)) >> exponent;
-	exponent += 31 - 127;
-	{
-		int imask = (!(((((1 << (exponent))) - 1) >> 8)&a));
-		exponent -= (31 - 127) + 32;
-		exponent >>= 31;
-		a >>= 31;
-		r -= (imask&a);
-		r &= exponent;
-		r ^= a;
-		}
-	return r;
-}
-
-// Validity checks
-IC bool fis_gremlin		( const float &f ) 
-{
-	u8		value = u8(((*(int*)&f & 0x7f800000)>>23)-0x20);
-    return	value > 0xc0;
-}
-IC bool fis_denormal	( const float &f ) 
-{
-  return !(*(int*)&f & 0x7f800000);
-}
-
-// Approximated calculations
-IC float apx_InvSqrt( const float& n )
-{
-    return 1 / sqrt(n);
-}
-// Only for [0..1] (positive) range 
-IC float apx_asin	(const float x)
-{
-	return asin(x);
-}
-// Only for [0..1] (positive) range 
-IC float apx_acos	(const float x)
-{
-	return acos(x);
 }
